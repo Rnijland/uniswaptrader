@@ -1,0 +1,208 @@
+<!-- src/ui/views/wallet-details.ejs -->
+<%- include('layout', { title: title, body: `
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="card-title mb-0">Wallet: ${name}</h2>
+          <a href="/wallets" class="btn btn-secondary">Back to Wallets</a>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card">
+              <div class="card-header">Address</div>
+              <div class="card-body">
+                <p class="mono break-all">${wallet.address}</p>
+              </div>
+            </div>
+          </div>
+          
+          ${wallet.privateKey ? `
+          <div class="col-md-6 mb-3">
+            <div class="card">
+              <div class="card-header">Private Key</div>
+              <div class="card-body">
+                <p class="mono break-all">${wallet.privateKey}</p>
+                <div class="alert alert-danger mt-2 mb-0 py-2 small">
+                  IMPORTANT: Never share your private key with anyone!
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-12 mb-3">
+            <div class="card">
+              <div class="card-header">Mnemonic Phrase</div>
+              <div class="card-body">
+                <p class="mono break-all">${wallet.mnemonic}</p>
+                <div class="alert alert-danger mt-2 mb-0 py-2 small">
+                  IMPORTANT: Store this phrase securely!
+                </div>
+              </div>
+            </div>
+          </div>
+          ` : `
+          <div class="col-md-6 mb-3">
+            <div class="card">
+              <div class="card-header">Balance</div>
+              <div class="card-body">
+                <p class="fs-4">${wallet.balance} ETH</p>
+              </div>
+            </div>
+          </div>
+          `}
+        </div>
+        
+        ${!wallet.privateKey ? `
+        <div class="mt-4">
+          <h3 class="mb-3">Actions</h3>
+          
+          <!-- Tabs for different actions -->
+          <ul class="nav nav-tabs" id="actionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="send-eth-tab" data-bs-toggle="tab" data-bs-target="#send-eth" type="button" role="tab">
+                Send ETH
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="send-token-tab" data-bs-toggle="tab" data-bs-target="#send-token" type="button" role="tab">
+                Send Token
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="swap-tab" data-bs-toggle="tab" data-bs-target="#swap" type="button" role="tab">
+                Swap Tokens
+              </button>
+            </li>
+          </ul>
+          
+          <!-- Tab content -->
+          <div class="tab-content p-3 border border-top-0 rounded-bottom mb-4">
+            <!-- Send ETH Tab -->
+            <div class="tab-pane fade show active" id="send-eth" role="tabpanel">
+              <h4 class="mb-3">Send ETH</h4>
+              <form id="sendEthForm">
+                <input type="hidden" id="walletName" value="${name}">
+                <div class="mb-3">
+                  <label for="ethRecipient" class="form-label">Recipient Address</label>
+                  <input type="text" class="form-control" id="ethRecipient" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="ethAmount" class="form-label">Amount (ETH)</label>
+                  <input type="number" class="form-control" id="ethAmount" step="0.000001" min="0.000001" placeholder="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Send ETH</button>
+              </form>
+              <div id="sendEthResult" class="mt-3" style="display: none;"></div>
+            </div>
+            
+            <!-- Send Token Tab -->
+            <div class="tab-pane fade" id="send-token" role="tabpanel">
+              <h4 class="mb-3">Send Token</h4>
+              <form id="sendTokenForm">
+                <div class="mb-3">
+                  <label for="tokenAddress" class="form-label">Token Address</label>
+                  <input type="text" class="form-control" id="tokenAddress" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenRecipient" class="form-label">Recipient Address</label>
+                  <input type="text" class="form-control" id="tokenRecipient" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenAmount" class="form-label">Amount</label>
+                  <input type="number" class="form-control" id="tokenAmount" step="0.000001" min="0.000001" placeholder="1.0" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Token</button>
+              </form>
+              <div id="sendTokenResult" class="mt-3" style="display: none;"></div>
+            </div>
+            
+            <!-- Swap Tab -->
+            <div class="tab-pane fade" id="swap" role="tabpanel">
+              <h4 class="mb-3">Swap Tokens</h4>
+              
+              <!-- Swap Type Selection -->
+              <div class="mb-3">
+                <label for="swapType" class="form-label">Swap Type</label>
+                <select class="form-select" id="swapType">
+                  <option value="ethForTokens">ETH → Token</option>
+                  <option value="tokensForEth">Token → ETH</option>
+                  <option value="tokensForTokens">Token → Token</option>
+                </select>
+              </div>
+              
+              <!-- ETH to Token Form -->
+              <form id="ethForTokensForm">
+                <div class="mb-3">
+                  <label for="ethToTokenAddress" class="form-label">Token Address</label>
+                  <input type="text" class="form-control" id="ethToTokenAddress" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="ethToTokenAmount" class="form-label">ETH Amount</label>
+                  <input type="number" class="form-control" id="ethToTokenAmount" step="0.000001" min="0.000001" placeholder="0.01" required>
+                </div>
+                <div class="mb-3">
+                  <label for="ethToTokenSlippage" class="form-label">Slippage Tolerance (%)</label>
+                  <input type="number" class="form-control" id="ethToTokenSlippage" value="2" min="0.1" max="50" step="0.1">
+                </div>
+                <button type="submit" class="btn btn-primary">Swap ETH for Tokens</button>
+              </form>
+              
+              <!-- Token to ETH Form -->
+              <form id="tokensForEthForm" style="display: none;">
+                <div class="mb-3">
+                  <label for="tokenToEthAddress" class="form-label">Token Address</label>
+                  <input type="text" class="form-control" id="tokenToEthAddress" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenToEthAmount" class="form-label">Token Amount</label>
+                  <input type="number" class="form-control" id="tokenToEthAmount" step="0.000001" min="0.000001" placeholder="1.0" required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenToEthSlippage" class="form-label">Slippage Tolerance (%)</label>
+                  <input type="number" class="form-control" id="tokenToEthSlippage" value="2" min="0.1" max="50" step="0.1">
+                </div>
+                <button type="submit" class="btn btn-primary">Swap Tokens for ETH</button>
+              </form>
+              
+              <!-- Token to Token Form -->
+              <form id="tokensForTokensForm" style="display: none;">
+                <div class="mb-3">
+                  <label for="fromTokenAddress" class="form-label">From Token Address</label>
+                  <input type="text" class="form-control" id="fromTokenAddress" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="toTokenAddress" class="form-label">To Token Address</label>
+                  <input type="text" class="form-control" id="toTokenAddress" placeholder="0x..." required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenToTokenAmount" class="form-label">Token Amount</label>
+                  <input type="number" class="form-control" id="tokenToTokenAmount" step="0.000001" min="0.000001" placeholder="1.0" required>
+                </div>
+                <div class="mb-3">
+                  <label for="tokenToTokenSlippage" class="form-label">Slippage Tolerance (%)</label>
+                  <input type="number" class="form-control" id="tokenToTokenSlippage" value="2" min="0.1" max="50" step="0.1">
+                </div>
+                <button type="submit" class="btn btn-primary">Swap Tokens for Tokens</button>
+              </form>
+              
+              <div id="swapResult" class="mt-3" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Transaction History -->
+        <div class="mt-4">
+          <h3 class="mb-3">Transaction History</h3>
+          <div class="alert alert-info">
+            Transaction history will be displayed here in a future update.
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+    
+    ${!wallet.privateKey ? `
+    <script src="/js/wallet-details.js"></script>
+    ` : ''}
+    ` }) %>

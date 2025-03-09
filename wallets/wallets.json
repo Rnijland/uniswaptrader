@@ -1,0 +1,14 @@
+{
+  "Roywallet": {
+    "address": "0x8fAC43DD90D43DDe560A073CC483065f2C45f081",
+    "privateKey": "0x9c840c73501882f0d4a197886291f9b3b946b6f44a05083749ddd7ebc1adeee2",
+    "mnemonic": "dolphin flavor coffee answer engine weekend symptom craft base culture noise nephew",
+    "createdAt": "2025-03-09T08:50:35.411Z"
+  },
+  "AceWallet": {
+    "address": "0x6abD045eaFB19F41d1dC3787b61ea285D046cCD6",
+    "privateKey": "0x42c0c8725038021c1cb3c6562eb0df30f93705f145d07047f479e0a2e84e01d8",
+    "mnemonic": "coil brush faint knock orphan word neutral prepare sausage hunt body abandon",
+    "createdAt": "2025-03-09T09:35:55.220Z"
+  }
+}

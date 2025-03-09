@@ -1,0 +1,41 @@
+<!-- src/ui/views/index.ejs -->
+<%- include('layout', { title: title, body: `
+    <div class="card">
+      <div class="card-body">
+        <h2 class="card-title mb-3">Welcome to Uniswap Trading Bot</h2>
+        <p class="card-text">This tool helps you manage wallets and execute trades on Uniswap.</p>
+        
+        <div class="row mt-4">
+          <div class="col-md-4 mb-3">
+            <div class="card text-white bg-primary">
+              <div class="card-body text-center p-4">
+                <h3 class="card-title">Wallet Management</h3>
+                <p class="card-text">Create and manage trading wallets</p>
+                <a href="/wallets" class="btn btn-light mt-2">Go to Wallets</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <div class="card text-white bg-info">
+              <div class="card-body text-center p-4">
+                <h3 class="card-title">Swap Simulator</h3>
+                <p class="card-text">Simulate swaps without spending gas</p>
+                <a href="/swap-simulator" class="btn btn-light mt-2">Go to Simulator</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <div class="card text-white bg-success">
+              <div class="card-body text-center p-4">
+                <h3 class="card-title">Pool Explorer</h3>
+                <p class="card-text">Explore Uniswap pools and their data</p>
+                <a href="/pools" class="btn btn-light mt-2">Explore Pools</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ` }) %>
