@@ -444,6 +444,35 @@ calculateV3Price(poolData: any): { price01: number, price10: number } {
   }
   
   /**
+   * Get pool data for a given pool address (tries both V3 and V2)
+   */
+  async getPoolData(poolAddress: string): Promise<any> {
+    try {
+      // Try to get V3 pool data first
+      try {
+        const v3Data = await this.getV3PoolData(poolAddress);
+        return v3Data;
+      } catch (v3Error) {
+        // If V3 fails, try V2
+        try {
+          const v2Data = await this.getV2PoolData(poolAddress);
+          return v2Data;
+        } catch (v2Error) {
+          // If both fail, throw an error
+          throw new Error(`Could not get data for pool ${poolAddress} (tried both V3 and V2)`);
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+        
+      logger.error(`Error getting pool data: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
    * Clear old cache entries to prevent memory leaks
    */
   clearStaleCache() {

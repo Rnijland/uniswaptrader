@@ -8,6 +8,10 @@ import { provider } from '../../config/provider';
 // Initialize the quoter service
 const quoterService = new QuoterService();
 
+// USDC address for USD price calculations
+const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const USDC_DECIMALS = 6;
+
 // Common tokens on Ethereum mainnet with their decimals
 const COMMON_TOKENS: Record<string, { address: string; decimals: number }> = {
   'WETH': {
@@ -33,67 +37,41 @@ const COMMON_TOKENS: Record<string, { address: string; decimals: number }> = {
   'MKR': {
     address: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
     decimals: 18
-  },
-  'NEIRO': {
-    address: '0xC555D55279023E732CcD32D812114cAF5838fD46',
-    decimals: 18
-  },
-  'CELO': {
-    address: '0xd88D5F9E6c10E6FebC9296A454f6C2589b1E8fAE',
-    decimals: 18
-  },
-  'UNI': {
-    address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    decimals: 18
-  },
-  'beraSTONE': {
-    address: '0x6dcba3657EE750A51A13A235B4Ed081317dA3066',
-    decimals: 18
-  },
-  'PEPE': {
-    address: '0xA43fe16908251ee70EF74718545e4FE6C5cCEc9f',
-    decimals: 18
-  },
-  'TRX': {
-    address: '0x99950bAE3d0b79b8BeE86A8A208Ae1b087b9Dcb0',
-    decimals: 6
-  },
-  'LINK': {
-    address: '0xa6Cc3C2531FdaA6Ae1A3CA84c2855806728693e8',
-    decimals: 18
-  },
-  'PAXG': {
-    address: '0x9C4Fe5FFD9A9fC5678cFBd93Aa2D4FD684b67C4C',
-    decimals: 18
-  },
-  'AAVE': {
-    address: '0x5aB53EE1d50eeF2C1DD3d5402789cd27bB52c1bB',
-    decimals: 18
-  },
-  'ELON': {
-    address: '0x7B73644935b8e68019aC6356c40661E1bc315860',
-    decimals: 18
   }
 };
 
 /**
- * Get the symbol for a token address
- * @param address Token address
- * @returns Token symbol or shortened address if not found
+ * Get the USD price of a token using USDC pairs
+ * @param tokenAddress The token address to get the price for
+ * @param decimals The token's decimals
+ * @returns The USD price per token
  */
-function getTokenSymbol(address: string): string {
-  // Normalize the address
-  const normalizedAddress = address.toLowerCase();
-  
-  // Look up in COMMON_TOKENS
-  for (const [symbol, token] of Object.entries(COMMON_TOKENS)) {
-    if (token.address.toLowerCase() === normalizedAddress) {
-      return symbol;
+async function getTokenUsdPrice(tokenAddress: string, decimals: number): Promise<number> {
+  try {
+    // If the token is USDC, return 1
+    if (tokenAddress.toLowerCase() === USDC_ADDRESS.toLowerCase()) {
+      return 1.0;
     }
+    
+    // Use the quoter service to get the price in USDC
+    const quoterService = new QuoterService();
+    
+    // Get how much USDC you get for 1 token
+    const oneToken = '1';
+    const usdcAmount = await quoterService.quoteExactInputSingleWithFallback(
+      tokenAddress,
+      USDC_ADDRESS,
+      3000, // 0.3% fee tier
+      oneToken,
+      decimals
+    );
+    
+    // Parse the USDC amount to a number
+    return parseFloat(usdcAmount);
+  } catch (error: any) {
+    logger.error(`Error getting USD price for token ${tokenAddress}: ${error.message}`);
+    return 0; // Return 0 if we can't get the price
   }
-  
-  // If not found, return a shortened address
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 }
 
 // Get a quote for a swap
@@ -107,10 +85,6 @@ export async function getSwapQuote(req: Request, res: Response) {
         error: 'Missing required parameters'
       });
     }
-    
-    // Get token symbols
-    const tokenInSymbol = getTokenSymbol(tokenIn);
-    const tokenOutSymbol = getTokenSymbol(tokenOut);
     
     // Get token decimals (either from our list or fetch from contract)
     let decimalsIn = 18; // Default to 18
@@ -137,35 +111,47 @@ export async function getSwapQuote(req: Request, res: Response) {
       }
     }
     
-    // Try to get a quote using all available methods with fallbacks
+    // Check if tokenOut is a pool address
     let amountOut;
+    let isPoolAddress = false;
     
     try {
-      // First check if tokenOut is a pool address
+      // Try to detect if tokenOut is a pool address
+      const poolContract = new ethers.Contract(
+        tokenOut,
+        ['function token0() external view returns (address)', 'function token1() external view returns (address)'],
+        provider
+      );
+      
+      // If this succeeds, it's likely a pool address
+      await poolContract.token0();
+      isPoolAddress = true;
+      
+      // Use direct pool quote
+      logger.info(`Using direct pool quote for pool address: ${tokenOut}`);
+      amountOut = await quoterService.quoteDirectFromPool(
+        tokenOut,
+        tokenIn,
+        amountIn,
+        decimalsIn
+      );
+    } catch (poolError) {
+      // Not a pool address, use normal flow
+      logger.info(`${tokenOut} is not a pool address or couldn't be accessed directly`);
+      
       try {
-        const poolContract = new ethers.Contract(
-          tokenOut,
-          ['function token0() external view returns (address)', 'function token1() external view returns (address)'],
-          provider
-        );
-        
-        // If this succeeds, it's likely a pool address
-        await poolContract.token0();
-        
-        // Use direct pool quote
-        logger.info(`Using direct pool quote for pool address: ${tokenOut}`);
-        amountOut = await quoterService.quoteDirectFromPool(
-          tokenOut,
+        // Try using the pool address lookup
+        amountOut = await quoterService.quoteExactInputByPoolAddress(
           tokenIn,
+          tokenOut,
+          parseInt(fee),
           amountIn,
           decimalsIn
         );
-      } catch (poolError) {
-        // Not a pool address, use comprehensive fallback system
-        logger.info(`${tokenOut} is not a pool address or couldn't be accessed directly, using all fallbacks`);
-        
-        // Try all quote methods with fallbacks
-        amountOut = await quoterService.quoteWithAllFallbacks(
+      } catch (error: any) {
+        // If that fails, try with fallback through WETH
+        logger.warn(`Pool address quote failed, trying fallback: ${error.message}`);
+        amountOut = await quoterService.quoteExactInputSingleWithFallback(
           tokenIn,
           tokenOut,
           parseInt(fee),
@@ -173,32 +159,50 @@ export async function getSwapQuote(req: Request, res: Response) {
           decimalsIn
         );
       }
-    } catch (error: any) {
-      // If all methods fail, try one last attempt with V2 directly
-      logger.warn(`All standard quote methods failed, trying V2 as last resort: ${error.message}`);
-      
-      try {
-        // Last resort: try V2 with WETH routing
-        amountOut = await quoterService.quoteV2ExactInputWithFallback(
-          tokenIn,
-          tokenOut,
-          amountIn,
-          decimalsIn
-        );
-      } catch (finalError: any) {
-        logger.error(`Final quote attempt failed: ${finalError.message}`);
-        throw error; // Throw the original error
-      }
     }
+    
+    // Get USD prices for tokens
+    const amountInNumber = parseFloat(amountIn);
+    const amountOutNumber = parseFloat(amountOut);
+    
+    // Get USD price for input token
+    const tokenInUsdPrice = await getTokenUsdPrice(tokenIn, decimalsIn);
+    const amountInUsd = amountInNumber * tokenInUsdPrice;
+    
+    // Get USD price for output token
+    let tokenOutDecimals = 18; // Default
+    try {
+      // Try to get decimals from contract
+      const tokenContract = new ethers.Contract(
+        tokenOut,
+        ['function decimals() view returns (uint8)'],
+        provider
+      );
+      tokenOutDecimals = await tokenContract.decimals();
+    } catch (error) {
+      // If we can't get decimals, check if it's a common token
+      const tokenOutInfo = Object.values(COMMON_TOKENS).find(
+        token => token.address.toLowerCase() === tokenOut.toLowerCase()
+      );
+      if (tokenOutInfo) {
+        tokenOutDecimals = tokenOutInfo.decimals;
+      }
+      // Otherwise use default of 18
+    }
+    
+    const tokenOutUsdPrice = await getTokenUsdPrice(tokenOut, tokenOutDecimals);
+    const amountOutUsd = amountOutNumber * tokenOutUsdPrice;
     
     return res.json({
       success: true,
       amountIn,
       amountOut,
+      amountInUsd,
+      amountOutUsd,
+      tokenInUsdPrice,
+      tokenOutUsdPrice,
       tokenIn,
       tokenOut,
-      tokenInSymbol,
-      tokenOutSymbol,
       fee
     });
   } catch (error: any) {

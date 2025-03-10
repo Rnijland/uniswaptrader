@@ -57,12 +57,50 @@ document.getElementById('swapSimulatorForm').addEventListener('submit', async fu
     
     if (data.success) {
       // Show result
-      document.getElementById('quoteAmountIn').textContent = `${data.amountIn} ${data.tokenInSymbol}`;
-      document.getElementById('quoteAmountOut').textContent = `${data.amountOut} ${data.tokenOutSymbol}`;
+      document.getElementById('quoteAmountIn').textContent = `${data.amountIn} ${getTokenSymbol(tokenIn)}`;
+      document.getElementById('quoteAmountOut').textContent = `${data.amountOut} ${getTokenSymbol(tokenOut)}`;
+      
+      // Get token symbols
+      const tokenInSymbol = getTokenSymbol(tokenIn);
+      const tokenOutSymbol = getTokenSymbol(tokenOut);
+      
+      // Show USD values if available
+      if (data.amountInUsd !== undefined && data.amountOutUsd !== undefined) {
+        document.getElementById('quoteAmountInUsd').textContent = `$${formatUSD(data.amountInUsd)}`;
+        document.getElementById('quoteAmountOutUsd').textContent = `$${formatUSD(data.amountOutUsd)}`;
+        document.getElementById('usdValues').style.display = 'block';
+      } else {
+        document.getElementById('usdValues').style.display = 'none';
+      }
       
       // Calculate and display rate
       const rate = parseFloat(data.amountOut) / parseFloat(data.amountIn);
-      document.getElementById('quoteRate').textContent = `1 ${data.tokenInSymbol} = ${rate.toFixed(6)} ${data.tokenOutSymbol}`;
+      document.getElementById('quoteRate').textContent = `1 ${tokenInSymbol} = ${rate.toFixed(6)} ${tokenOutSymbol}`;
+      
+      // Display USD breakdown if available
+      if (data.tokenInUsdPrice && data.tokenOutUsdPrice) {
+        // Set token symbols
+        document.getElementById('inputTokenSymbol').textContent = tokenInSymbol;
+        document.getElementById('outputTokenSymbol').textContent = tokenOutSymbol;
+        document.getElementById('inputTokenSymbol2').textContent = tokenInSymbol;
+        document.getElementById('outputTokenSymbol2').textContent = tokenOutSymbol;
+        
+        // Set token prices
+        document.getElementById('inputTokenUsdPrice').textContent = `$${formatUSD(data.tokenInUsdPrice)}`;
+        document.getElementById('outputTokenUsdPrice').textContent = `$${formatUSD(data.tokenOutUsdPrice)}`;
+        
+        // Calculate effective USD exchange rate
+        // This is how much $1 worth of input token gets you in output token value
+        const effectiveRate = data.tokenInUsdPrice > 0 ? 
+          (rate * data.tokenOutUsdPrice) / data.tokenInUsdPrice : 0;
+        
+        document.getElementById('effectiveUsdRate').textContent = formatUSD(effectiveRate);
+        
+        // Show the breakdown
+        document.getElementById('usdBreakdown').style.display = 'block';
+      } else {
+        document.getElementById('usdBreakdown').style.display = 'none';
+      }
       
       document.getElementById('quoteResult').style.display = 'block';
     } else {
@@ -79,6 +117,15 @@ document.getElementById('swapSimulatorForm').addEventListener('submit', async fu
     document.getElementById('quoteError').style.display = 'block';
   }
 });
+
+// Format USD value with 2 decimal places
+function formatUSD(value) {
+  // Handle very small values
+  if (value < 0.01 && value > 0) {
+    return '< 0.01';
+  }
+  return value.toFixed(2);
+}
 
 // Helper to get token symbol from address
 function getTokenSymbol(address) {

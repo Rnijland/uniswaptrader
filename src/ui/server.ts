@@ -114,6 +114,15 @@ app.get('/pools', (req, res) => {
 app.get('/swap-simulator', swapSimulatorController.renderSwapSimulator);
 app.post('/api/swap-simulator/quote', swapSimulatorController.getSwapQuote);
 
+
+// Import the filter routes
+import filterRoutes from '../routes/filters';
+import filterViewRoutes from '../routes/filterViews';
+
+// Register the routes (find where other routes are registered)
+app.use('/api/filters', filterRoutes);
+app.use('/filters', filterViewRoutes);
+
 // Start server
 export function startServer() {
   app.listen(PORT, () => {

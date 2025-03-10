@@ -1,0 +1,162 @@
+<!-- src/ui/views/pool-scanner.ejs -->
+<%- include('layout', { title: title, body: `
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="card-title mb-0">Pool Scanner</h2>
+          <a href="/filters" class="btn btn-secondary">Back to Filters</a>
+        </div>
+        
+        <div class="alert alert-info">
+          <strong>Pool Scanner</strong> lets you scan multiple pools with your filters to find trading opportunities.
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Scanner Settings</h5>
+              </div>
+              <div class="card-body">
+                <form id="scannerForm">
+                  <div class="mb-3">
+                    <label class="form-label">Filter Type</label>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="scanFilterType" id="scanFilterTypeInstance" value="instance" checked>
+                      <label class="form-check-label" for="scanFilterTypeInstance">
+                        Individual Filter
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="scanFilterType" id="scanFilterTypeChain" value="chain">
+                      <label class="form-check-label" for="scanFilterTypeChain">
+                        Filter Group
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div id="scanFilterInstanceSelect" class="mb-3">
+                    <label for="scanFilterInstance" class="form-label">Select Filter</label>
+                    <select class="form-select" id="scanFilterInstance">
+                      <option value="">Select a filter...</option>
+                      <!-- Will be populated by JavaScript -->
+                    </select>
+                  </div>
+                  
+                  <div id="scanFilterChainSelect" class="mb-3" style="display: none;">
+                    <label for="scanFilterChain" class="form-label">Select Filter Group</label>
+                    <select class="form-select" id="scanFilterChain">
+                      <option value="">Select a filter group...</option>
+                      <!-- Will be populated by JavaScript -->
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="scanType" class="form-label">Scan Type</label>
+                    <select class="form-select" id="scanType">
+                      <option value="top">Top Pools by Volume</option>
+                      <option value="custom">Custom Pool List</option>
+                    </select>
+                  </div>
+                  
+                  <div id="topPoolsOptions" class="mb-3">
+                    <label for="poolCount" class="form-label">Number of Pools</label>
+                    <select class="form-select" id="poolCount">
+                      <option value="10">Top 10</option>
+                      <option value="25">Top 25</option>
+                      <option value="50">Top 50</option>
+                      <option value="100">Top 100</option>
+                    </select>
+                  </div>
+                  
+                  <div id="customPoolsOptions" class="mb-3" style="display: none;">
+                    <label for="customPools" class="form-label">Pool Addresses</label>
+                    <textarea class="form-control" id="customPools" rows="4" placeholder="Enter pool addresses, one per line"></textarea>
+                  </div>
+                  
+                  <button type="button" id="scanBtn" class="btn btn-primary">Scan Pools</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Filter Details</h5>
+              </div>
+              <div class="card-body">
+                <div id="scanFilterDetails">
+                  <!-- Will be populated by JavaScript -->
+                  <div class="text-center py-4 text-muted" id="noScanFilterSelectedMessage">
+                    <p>Select a filter to view details.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="scanResultsSection" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Scan Results</h3>
+            <div>
+              <span class="badge bg-primary me-2" id="scanStatsTotal">Total: 0</span>
+              <span class="badge bg-success" id="scanStatsMatches">Matches: 0</span>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Matching Pools</h5>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="showOnlyMatches" checked>
+                <label class="form-check-label" for="showOnlyMatches">Show only matches</label>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Pool</th>
+                      <th>Result</th>
+                      <th>Details</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scanResultsTable">
+                    <!-- Will be populated by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <div id="noScanResultsMessage" class="text-center py-4 text-muted" style="display: none;">
+                <p>No matching pools found.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Pool Details Modal -->
+    <div class="modal fade" id="poolDetailsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Pool Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="poolDetailsBody">
+            <!-- Will be populated by JavaScript -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="/js/pool-scanner.js"></script>
+    ` }) %>

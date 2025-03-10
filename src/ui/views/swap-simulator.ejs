@@ -8,7 +8,7 @@
         </div>
         
         <div class="alert alert-info">
-          <strong>Note:</strong> This simulator uses Uniswap's Quoter contracts (V2 and V3) to estimate swap outcomes without executing real transactions or spending gas. It supports both Uniswap V2 and V3 pools.
+          <strong>Note:</strong> This simulator uses Uniswap's Quoter contract to estimate swap outcomes without executing real transactions or spending gas.
         </div>
         
         <div class="row">
@@ -86,8 +86,42 @@
                         <strong>Output:</strong> <span id="quoteAmountOut"></span>
                       </div>
                     </div>
-                    <div class="mt-2">
+                    
+                    <!-- USD Values -->
+                    <div id="usdValues" class="d-flex justify-content-between mt-1" style="display: none;">
+                      <div>
+                        <span class="text-muted">≈ <span id="quoteAmountInUsd"></span></span>
+                      </div>
+                      <div>
+                        <span class="text-muted">≈ <span id="quoteAmountOutUsd"></span></span>
+                      </div>
+                    </div>
+                    
+                    <div class="mt-3">
                       <strong>Exchange Rate:</strong> <span id="quoteRate"></span>
+                    </div>
+                    
+                    <!-- USD Breakdown -->
+                    <div id="usdBreakdown" class="mt-3 p-2 bg-light rounded" style="display: none;">
+                      <h6 class="mb-2">USD Value Breakdown</h6>
+                      <div class="row">
+                        <div class="col-6">
+                          <div class="mb-1">
+                            <small><strong>Input Token Price:</strong></small><br>
+                            <small>1 <span id="inputTokenSymbol"></span> = <span id="inputTokenUsdPrice"></span></small>
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <div class="mb-1">
+                            <small><strong>Output Token Price:</strong></small><br>
+                            <small>1 <span id="outputTokenSymbol"></span> = <span id="outputTokenUsdPrice"></span></small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mt-1">
+                        <small><strong>Effective USD Exchange Rate:</strong></small><br>
+                        <small>$1.00 in <span id="inputTokenSymbol2"></span> = $<span id="effectiveUsdRate"></span> in <span id="outputTokenSymbol2"></span></small>
+                      </div>
                     </div>
                   </div>
                   

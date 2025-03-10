@@ -1,0 +1,124 @@
+<!-- src/ui/views/filter-analyzer.ejs -->
+<%- include('layout', { title: title, body: `
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="card-title mb-0">Filter Analyzer</h2>
+          <a href="/filters" class="btn btn-secondary">Back to Filters</a>
+        </div>
+        
+        <div class="alert alert-info">
+          <strong>Filter Analyzer</strong> lets you test filters against specific pools to see detailed results.
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Select Filter</h5>
+              </div>
+              <div class="card-body">
+                <form id="analyzerForm">
+                  <div class="mb-3">
+                    <label class="form-label">Filter Type</label>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="filterType" id="filterTypeInstance" value="instance" checked>
+                      <label class="form-check-label" for="filterTypeInstance">
+                        Individual Filter
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="filterType" id="filterTypeChain" value="chain">
+                      <label class="form-check-label" for="filterTypeChain">
+                        Filter Group
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div id="filterInstanceSelect" class="mb-3">
+                    <label for="filterInstance" class="form-label">Select Filter</label>
+                    <select class="form-select" id="filterInstance">
+                      <option value="">Select a filter...</option>
+                      <!-- Will be populated by JavaScript -->
+                    </select>
+                  </div>
+                  
+                  <div id="filterChainSelect" class="mb-3" style="display: none;">
+                    <label for="filterChain" class="form-label">Select Filter Group</label>
+                    <select class="form-select" id="filterChain">
+                      <option value="">Select a filter group...</option>
+                      <!-- Will be populated by JavaScript -->
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="poolAddress" class="form-label">Pool Address</label>
+                    <input type="text" class="form-control" id="poolAddress" placeholder="0x...">
+                    <div class="form-text">Enter a Uniswap pool address to analyze.</div>
+                  </div>
+                  
+                  <button type="button" id="analyzeBtn" class="btn btn-primary">Analyze Pool</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Filter Details</h5>
+              </div>
+              <div class="card-body">
+                <div id="filterDetails">
+                  <!-- Will be populated by JavaScript -->
+                  <div class="text-center py-4 text-muted" id="noFilterSelectedMessage">
+                    <p>Select a filter to view details.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="analysisResultSection" style="display: none;">
+          <h3 class="mb-3">Analysis Result</h3>
+          
+          <div class="row">
+            <div class="col-md-12 mb-4">
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">
+                    <span class="badge bg-success me-2" id="resultMatchBadge" style="display: none;">MATCH</span>
+                    <span class="badge bg-danger me-2" id="resultNoMatchBadge" style="display: none;">NO MATCH</span>
+                    Result Summary
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div id="analysisResults">
+                    <!-- Will be populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row" id="poolDataSection">
+            <div class="col-md-12 mb-4">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0">Pool Data</h5>
+                </div>
+                <div class="card-body">
+                  <div id="poolData">
+                    <!-- Will be populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="/js/filter-analyzer.js"></script>
+    ` }) %>
