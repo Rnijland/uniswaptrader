@@ -3,8 +3,8 @@ services:
     name: uniswap-trading-bot
     env: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: node dist/index.js
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: chmod +x start.sh && ./start.sh
     envVars:
       - key: NODE_ENV
         value: production

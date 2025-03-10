@@ -1,1 +1,1 @@
-web: node dist/index.js
+web: chmod +x start.sh && ./start.sh
